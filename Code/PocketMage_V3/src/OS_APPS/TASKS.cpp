@@ -37,7 +37,7 @@ void sortTasksByDueDate(std::vector<std::vector<String>> &tasks) {
 
 void updateTasksFile() {
   SDActive = true;
-  setCpuFrequencyMhz(240);
+  pocketmage::setCpuSpeed(240);
   delay(50);
   // Clear the existing tasks file first
   SD().delFile("/sys/tasks.txt");
@@ -51,7 +51,7 @@ void updateTasksFile() {
     SD().appendToFile("/sys/tasks.txt", taskInfo);
   }
 
-  if (SAVE_POWER) setCpuFrequencyMhz(POWER_SAVE_FREQ);
+  if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
   SDActive = false;
 }
 
@@ -65,7 +65,7 @@ void addTask(String taskName, String dueDate, String priority, String completed)
 
 void updateTaskArray() {
   SDActive = true;
-  setCpuFrequencyMhz(240);
+  pocketmage::setCpuSpeed(240);
   delay(50);
   File file = SD_MMC.open("/sys/tasks.txt", "r"); // Open the text file in read mode
   if (!file) {
@@ -102,7 +102,7 @@ void updateTaskArray() {
 
   file.close();  // Close the file
 
-  if (SAVE_POWER) setCpuFrequencyMhz(POWER_SAVE_FREQ);
+  if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
   SDActive = false;
 }
 

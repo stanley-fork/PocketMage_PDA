@@ -78,7 +78,7 @@ String renderWizMini(String folder, int8_t scrollDelta) {
   // Reload directory if folder changed
   if (folder != prevFolder) {
     SDActive = true;
-    setCpuFrequencyMhz(240);
+    pocketmage::setCpuSpeed(240);
 
     scroll = 0;
     scrollDelta = 0;
@@ -124,20 +124,20 @@ String renderWizMini(String folder, int8_t scrollDelta) {
     prevFolder = folder;
 
     if (SAVE_POWER)
-    setCpuFrequencyMhz(POWER_SAVE_FREQ);
+    pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
     SDActive = false;
   }
 
   // Reload directory if file changed
   /*if (refreshFiles) {
     SDActive = true;
-    setCpuFrequencyMhz(240);
+    pocketmage::setCpuSpeed(240);
     delay(50);
 
     // TODO: Need to refresh directory here.
 
     if (SAVE_POWER)
-    setCpuFrequencyMhz(POWER_SAVE_FREQ);
+    pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
     SDActive = false;
   }*/
 
@@ -206,7 +206,7 @@ String renderWizMini(String folder, int8_t scrollDelta) {
 }
 
 String fileWizardMini(bool allowRecentSelect, String rootDir) {
-  setCpuFrequencyMhz(240);
+  pocketmage::setCpuSpeed(240);
 
   int8_t scrollDelta = 0;
   static String selectedPath = "";
@@ -310,7 +310,7 @@ String fileWizardMini(bool allowRecentSelect, String rootDir) {
     }
   }
 
-  if (SAVE_POWER) setCpuFrequencyMhz(POWER_SAVE_FREQ);
+  if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
   return "";
 }
 

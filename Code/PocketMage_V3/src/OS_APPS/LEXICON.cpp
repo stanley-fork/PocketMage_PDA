@@ -21,7 +21,7 @@ void LEXICON_INIT() {
 void loadDefinitions(String word) {
   OLED().oledWord("Loading Definitions");
   SDActive = true;
-  setCpuFrequencyMhz(240);
+  pocketmage::setCpuSpeed(240);
   delay(50);
 
   defList.clear();  // Clear previous results
@@ -80,7 +80,7 @@ void loadDefinitions(String word) {
     newState = true;
   }
 
-  if (SAVE_POWER) setCpuFrequencyMhz(POWER_SAVE_FREQ);
+  if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
   SDActive = false;
 }
 

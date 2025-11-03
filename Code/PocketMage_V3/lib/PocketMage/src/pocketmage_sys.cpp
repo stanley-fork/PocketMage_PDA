@@ -67,7 +67,7 @@ namespace pocketmage {
         }
 
         if (isValid) {
-            setCpuFrequencyMhz(newFreq);
+            pocketmage::setCpuSpeed(newFreq);
             ESP_LOGI(TAG, "CPU Speed changed to: %d MHz", newFreq);
         }
     }
@@ -87,7 +87,7 @@ namespace pocketmage {
 
         if (alternateScreenSaver == false) {
             SDActive = true;
-            setCpuFrequencyMhz(240);
+            pocketmage::setCpuSpeed(240);
             delay(50);
 
             // Check if there are custom screensavers
@@ -133,7 +133,7 @@ namespace pocketmage {
             }
 
 
-            if (SAVE_POWER) setCpuFrequencyMhz(POWER_SAVE_FREQ);
+            if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
             SDActive = false;
 
             EINK().multiPassRefresh(2);
@@ -199,8 +199,8 @@ void PocketMage_INIT(){
   //btStop();
 
   // SET CPU CLOCK FOR POWER SAVE MODE
-  if (SAVE_POWER) setCpuFrequencyMhz(40 );
-  else            setCpuFrequencyMhz(240);
+  if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
+  else            pocketmage::setCpuSpeed(240);
   
   // CAPACATIVE TOUCH SETUP
   setupTouch();

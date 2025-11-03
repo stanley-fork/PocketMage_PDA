@@ -35,7 +35,7 @@ bool isLeapYear(int year) {
 
 void drawJMENU() {
   SDActive = true;
-  setCpuFrequencyMhz(240);
+  pocketmage::setCpuSpeed(240);
   delay(50);
 
   // Display background
@@ -134,13 +134,13 @@ void drawJMENU() {
     if (SD_MMC.exists(fileCode)) display.fillRect(91 + (7 * (i - 1)), 149, 4, 4, GxEPD_BLACK);
   }
 
-  if (SAVE_POWER) setCpuFrequencyMhz(POWER_SAVE_FREQ);
+  if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
   SDActive = false;
 }
 
 void JMENUCommand(String command) {
   SDActive = true;
-  setCpuFrequencyMhz(240);
+  pocketmage::setCpuSpeed(240);
   delay(50);
 
   command.toLowerCase();
@@ -174,7 +174,7 @@ void JMENUCommand(String command) {
     newLineAdded = true;
     CurrentJournalState = J_TXT;
 
-    if (SAVE_POWER) setCpuFrequencyMhz(POWER_SAVE_FREQ);
+    if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
     SDActive = false;
     return;
   }
@@ -198,7 +198,7 @@ void JMENUCommand(String command) {
     newLineAdded = true;
     CurrentJournalState = J_TXT;
 
-    if (SAVE_POWER) setCpuFrequencyMhz(POWER_SAVE_FREQ);
+    if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
     SDActive = false;
     return;
   }
@@ -212,14 +212,14 @@ void JMENUCommand(String command) {
       int day = dayStr.toInt();
 
       if (day < 1 || day > 31) {
-        if (SAVE_POWER) setCpuFrequencyMhz(POWER_SAVE_FREQ);
+        if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
         SDActive = false;
         return;  // invalid day
       }
       String monthMap = "janfebmaraprmayjunjulaugsepoctnovdec";
       int monthIndex = monthMap.indexOf(monthStr);
       if (monthIndex == -1) {
-        if (SAVE_POWER) setCpuFrequencyMhz(POWER_SAVE_FREQ);
+        if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
         SDActive = false;
         return;  // invalid month
       }
@@ -245,13 +245,13 @@ void JMENUCommand(String command) {
       newLineAdded = true;
       CurrentJournalState = J_TXT;
 
-      if (SAVE_POWER) setCpuFrequencyMhz(POWER_SAVE_FREQ);
+      if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
       SDActive = false;
       return;
     }
   }
 
-  if (SAVE_POWER) setCpuFrequencyMhz(POWER_SAVE_FREQ);
+  if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
   SDActive = false;
 }
 

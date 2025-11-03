@@ -41,7 +41,7 @@ void CALENDAR_INIT() {
 // TODO: Migrate to a better/global file management system
 void updateEventArray() {
   SDActive = true;
-  setCpuFrequencyMhz(240);
+  pocketmage::setCpuSpeed(240);
   delay(50);
 
   File file = SD_MMC.open("/sys/events.txt", "r"); // Open the text file in read mode
@@ -82,7 +82,7 @@ void updateEventArray() {
 
   file.close();  // Close the file
 
-  if (SAVE_POWER) setCpuFrequencyMhz(POWER_SAVE_FREQ);
+  if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
   SDActive = false;
 }
 
@@ -94,7 +94,7 @@ void sortEventsByDate(std::vector<std::vector<String>> &calendarEvents) {
 
 void updateEventsFile() {
   SDActive = true;
-  setCpuFrequencyMhz(240);
+  pocketmage::setCpuSpeed(240);
   delay(50);
   // Clear the existing calendarEvents file first
   SD().delFile("/sys/events.txt");
@@ -108,7 +108,7 @@ void updateEventsFile() {
     SD().appendToFile("/sys/events.txt", eventInfo);
   }
 
-  if (SAVE_POWER) setCpuFrequencyMhz(POWER_SAVE_FREQ);
+  if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
   SDActive = false;
 }
 

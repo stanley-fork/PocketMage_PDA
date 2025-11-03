@@ -61,7 +61,7 @@ void setupSD() {
     }
   }
 
-  setCpuFrequencyMhz(240);
+  pocketmage::setCpuSpeed(240);
   // Create folders and files if needed
   if (!SD_MMC.exists("/sys"))                 SD_MMC.mkdir( "/sys"                );
   if (!SD_MMC.exists("/notes"))               SD_MMC.mkdir( "/notes"              );
@@ -106,7 +106,7 @@ void PocketmageSD::saveFile() {
       return;
   } else {
       SDActive = true;
-      setCpuFrequencyMhz(240);
+      pocketmage::setCpuSpeed(240);
       delay(50);
 
       String textToSave = vectorToString();
@@ -127,14 +127,14 @@ void PocketmageSD::saveFile() {
       // delay(1000);
       keypad.enableInterrupts();
       if (SAVE_POWER)
-      setCpuFrequencyMhz(POWER_SAVE_FREQ);
+      pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
       SDActive = false;
   }
 }
   
 void PocketmageSD::writeMetadata(const String& path) {
   SDActive = true;
-  setCpuFrequencyMhz(240);
+  pocketmage::setCpuSpeed(240);
   delay(50);
 
   File file = SD_MMC.open(path);
@@ -197,13 +197,13 @@ void PocketmageSD::writeMetadata(const String& path) {
   ESP_LOGI(TAG, "Metadata updated");
 
   if (SAVE_POWER)
-  setCpuFrequencyMhz(POWER_SAVE_FREQ);
+  pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
   SDActive = false;
 }
   
 void PocketmageSD::loadFile(bool showOLED) {
   SDActive = true;
-  setCpuFrequencyMhz(240);
+  pocketmage::setCpuSpeed(240);
   delay(50);
 
   if (SD().getNoSD()) {
@@ -212,7 +212,7 @@ void PocketmageSD::loadFile(bool showOLED) {
       return;
   } else {
       SDActive = true;
-      setCpuFrequencyMhz(240);
+      pocketmage::setCpuSpeed(240);
       delay(50);
 
       keypad.disableInterrupts();
@@ -230,7 +230,7 @@ void PocketmageSD::loadFile(bool showOLED) {
       delay(200);
       }
       if (SAVE_POWER)
-      setCpuFrequencyMhz(POWER_SAVE_FREQ);
+      pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
       SDActive = false;
   }
 }
@@ -242,7 +242,7 @@ void PocketmageSD::delFile(String fileName) {
       return;
   } else {
       SDActive = true;
-      setCpuFrequencyMhz(240);
+      pocketmage::setCpuSpeed(240);
       delay(50);
 
       keypad.disableInterrupts();
@@ -258,14 +258,14 @@ void PocketmageSD::delFile(String fileName) {
       delay(1000);
       keypad.enableInterrupts();
       if (SAVE_POWER)
-      setCpuFrequencyMhz(POWER_SAVE_FREQ);
+      pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
       SDActive = false;
   }
 }
   
 void PocketmageSD::deleteMetadata(String path) {
   SDActive = true;
-  setCpuFrequencyMhz(240);
+  pocketmage::setCpuSpeed(240);
   delay(50);
 
   const char* metaPath = SYS_METADATA_FILE;
@@ -312,7 +312,7 @@ void PocketmageSD::renFile(String oldFile, String newFile) {
       return;
   } else {
       SDActive = true;
-      setCpuFrequencyMhz(240);
+      pocketmage::setCpuSpeed(240);
       delay(50);
 
       keypad.disableInterrupts();
@@ -330,14 +330,14 @@ void PocketmageSD::renFile(String oldFile, String newFile) {
 
       keypad.enableInterrupts();
       if (SAVE_POWER)
-      setCpuFrequencyMhz(POWER_SAVE_FREQ);
+      pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
       SDActive = false;
   }
 }
   
 void PocketmageSD::renMetadata(String oldPath, String newPath) {
   SDActive = true;
-  setCpuFrequencyMhz(240);
+  pocketmage::setCpuSpeed(240);
   delay(50);
   const char* metaPath = SYS_METADATA_FILE;
 
@@ -387,7 +387,7 @@ void PocketmageSD::renMetadata(String oldPath, String newPath) {
   ESP_LOGI(TAG, "Metadata updated for renamed file.");
 
   if (SAVE_POWER)
-      setCpuFrequencyMhz(POWER_SAVE_FREQ);
+      pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
   }
   
   void PocketmageSD::copyFile(String oldFile, String newFile) {
@@ -397,7 +397,7 @@ void PocketmageSD::renMetadata(String oldPath, String newPath) {
       return;
   } else {
       SDActive = true;
-      setCpuFrequencyMhz(240);
+      pocketmage::setCpuSpeed(240);
       delay(50);
 
       keypad.disableInterrupts();
@@ -417,7 +417,7 @@ void PocketmageSD::renMetadata(String oldPath, String newPath) {
       keypad.enableInterrupts();
 
       if (SAVE_POWER)
-      setCpuFrequencyMhz(POWER_SAVE_FREQ);
+      pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
       SDActive = false;
   }
 }
@@ -429,7 +429,7 @@ void PocketmageSD::appendToFile(String path, String inText) {
       return;
   } else {
       SDActive = true;
-      setCpuFrequencyMhz(240);
+      pocketmage::setCpuSpeed(240);
       delay(50);
 
       keypad.disableInterrupts();
@@ -441,7 +441,7 @@ void PocketmageSD::appendToFile(String path, String inText) {
       keypad.enableInterrupts();
 
       if (SAVE_POWER)
-      setCpuFrequencyMhz(POWER_SAVE_FREQ);
+      pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
       SDActive = false;
   }
 }
@@ -455,7 +455,7 @@ void PocketmageSD::listDir(fs::FS &fs, const char *dirname) {
     return;
   }
   else {
-    setCpuFrequencyMhz(240);
+    pocketmage::setCpuSpeed(240);
     delay(50);
     noTimeout = true;
     ESP_LOGI(tag, "Listing directory %s\r\n", dirname);
@@ -505,7 +505,7 @@ void PocketmageSD::listDir(fs::FS &fs, const char *dirname) {
     // }
 
     noTimeout = false;
-    if (SAVE_POWER) setCpuFrequencyMhz(POWER_SAVE_FREQ);
+    if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
   }
 }
 void PocketmageSD::readFile(fs::FS &fs, const char *path) {
@@ -515,7 +515,7 @@ void PocketmageSD::readFile(fs::FS &fs, const char *path) {
     return;
   }
   else {
-    setCpuFrequencyMhz(240);
+    pocketmage::setCpuSpeed(240);
     delay(50);
     noTimeout = true;
     ESP_LOGI(tag, "Reading file %s\r\n", path);
@@ -529,7 +529,7 @@ void PocketmageSD::readFile(fs::FS &fs, const char *path) {
 
     file.close();
     noTimeout = false;
-    if (SAVE_POWER) setCpuFrequencyMhz(POWER_SAVE_FREQ);
+    if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
   }
 }
 String PocketmageSD::readFileToString(fs::FS &fs, const char *path) {
@@ -539,7 +539,7 @@ String PocketmageSD::readFileToString(fs::FS &fs, const char *path) {
     return "";
   }
   else { 
-    setCpuFrequencyMhz(240);
+    pocketmage::setCpuSpeed(240);
     delay(50);
 
     noTimeout = true;
@@ -572,7 +572,7 @@ void PocketmageSD::writeFile(fs::FS &fs, const char *path, const char *message) 
     return;
   }
   else {
-    setCpuFrequencyMhz(240);
+    pocketmage::setCpuSpeed(240);
     delay(50);
     noTimeout = true;
     ESP_LOGI(tag, "Writing file: %s\r\n", path);
@@ -592,7 +592,7 @@ void PocketmageSD::writeFile(fs::FS &fs, const char *path, const char *message) 
     }
     file.close();
     noTimeout = false;
-    if (SAVE_POWER) setCpuFrequencyMhz(POWER_SAVE_FREQ);
+    if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
   }
 }
 void PocketmageSD::appendFile(fs::FS &fs, const char *path, const char *message) {
@@ -602,7 +602,7 @@ void PocketmageSD::appendFile(fs::FS &fs, const char *path, const char *message)
     return;
   }
   else {
-    setCpuFrequencyMhz(240);
+    pocketmage::setCpuSpeed(240);
     delay(50);
     noTimeout = true;
     ESP_LOGI(tag, "Appending to file: %s\r\n", path);
@@ -621,7 +621,7 @@ void PocketmageSD::appendFile(fs::FS &fs, const char *path, const char *message)
     }
     file.close();
     noTimeout = false;
-    if (SAVE_POWER) setCpuFrequencyMhz(POWER_SAVE_FREQ);
+    if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
   }
 }
 void PocketmageSD::renameFile(fs::FS &fs, const char *path1, const char *path2) {
@@ -631,7 +631,7 @@ void PocketmageSD::renameFile(fs::FS &fs, const char *path1, const char *path2) 
     return;
   }
   else {
-    setCpuFrequencyMhz(240);
+    pocketmage::setCpuSpeed(240);
     delay(50);
     noTimeout = true;
     ESP_LOGI(tag, "Renaming file %s to %s\r\n", path1, path2);
@@ -643,7 +643,7 @@ void PocketmageSD::renameFile(fs::FS &fs, const char *path1, const char *path2) 
       ESP_LOGE(tag, "Rename failed: %s to %s", path1, path2);
     }
     noTimeout = false;
-    if (SAVE_POWER) setCpuFrequencyMhz(POWER_SAVE_FREQ);
+    if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
   }
 }
 void PocketmageSD::deleteFile(fs::FS &fs, const char *path) {
@@ -653,7 +653,7 @@ void PocketmageSD::deleteFile(fs::FS &fs, const char *path) {
     return;
   }
   else {
-    setCpuFrequencyMhz(240);
+    pocketmage::setCpuSpeed(240);
     delay(50);
     noTimeout = true;
     ESP_LOGI(tag, "Deleting file: %s\r\n", path);
@@ -664,7 +664,7 @@ void PocketmageSD::deleteFile(fs::FS &fs, const char *path) {
       ESP_LOGE(tag, "Delete failed for %s", path);
     }
     noTimeout = false;
-    if (SAVE_POWER) setCpuFrequencyMhz(POWER_SAVE_FREQ);
+    if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
   }
 }
 

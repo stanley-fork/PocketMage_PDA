@@ -1124,7 +1124,7 @@ void loadMarkdownFile(const String& path) {
     refreshAllLineIndexes();
 
     if (SAVE_POWER)
-      setCpuFrequencyMhz(80);
+      pocketmage::setCpuSpeed(80);
     SDActive = false;
     return;
   }
@@ -1136,7 +1136,7 @@ void loadMarkdownFile(const String& path) {
   }
 
   SDActive = true;
-  setCpuFrequencyMhz(240);
+  pocketmage::setCpuSpeed(240);
   delay(50);
 
   docLines.clear();
@@ -1156,7 +1156,7 @@ void loadMarkdownFile(const String& path) {
     refreshAllLineIndexes();
 
     if (SAVE_POWER)
-      setCpuFrequencyMhz(80);
+      pocketmage::setCpuSpeed(80);
     SDActive = false;
     return;
   }
@@ -1222,7 +1222,7 @@ void loadMarkdownFile(const String& path) {
   refreshAllLineIndexes();
 
   if (SAVE_POWER)
-    setCpuFrequencyMhz(80);
+    pocketmage::setCpuSpeed(80);
   SDActive = false;
 
   OLED().oledWord("FILE LOADED");
@@ -1238,7 +1238,7 @@ void saveMarkdownFile(const String& path) {
   }
 
   SDActive = true;
-  setCpuFrequencyMhz(240);
+  pocketmage::setCpuSpeed(240);
   delay(50);
 
   // Determine save path
@@ -1289,7 +1289,7 @@ void saveMarkdownFile(const String& path) {
   delay(1000);
 
   if (SAVE_POWER)
-    setCpuFrequencyMhz(POWER_SAVE_FREQ);
+    pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
   SDActive = false;
 }
 
@@ -1345,7 +1345,7 @@ void editAppend(char inchar) {
 
   if (inchar != 0) {
     // Increase clock speed here for faster processing?
-    setCpuFrequencyMhz(240);
+    pocketmage::setCpuSpeed(240);
   }
 
   // HANDLE INPUTS
@@ -1634,7 +1634,7 @@ void editAppend(char inchar) {
   }
 
   if (SAVE_POWER)
-    setCpuFrequencyMhz(POWER_SAVE_FREQ);
+    pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
 }
 
 // INIT

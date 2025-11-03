@@ -17,13 +17,13 @@
 #include "hid_usage_keyboard.h"
 #include "hid_usage_mouse.h"
 
+static constexpr const char* TAG = "KB";
 /* GPIO Pin number for quit from example logic */
 #define APP_QUIT_PIN                GPIO_NUM_0
 #define MAX_USB_KB_CHARS 64
 
 static char usb_kb_chars[MAX_USB_KB_CHARS] = {0};  // unused slots initialized to '\0'
 
-static const char *TAG = "example";
 QueueHandle_t hid_host_event_queue;
 bool user_shutdown = false;
 static bool HIDInitialized = false;
@@ -676,7 +676,6 @@ char keysArrayFN[4][10] = {
 };
 #pragma endregion
 
-static constexpr const char* tag = "KB";
 
 Adafruit_TCA8418 keypad;
 // To Do:

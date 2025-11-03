@@ -61,7 +61,7 @@ void USBAppShutdown() {
 
   if (!SD_MMC.exists("/sys"))     SD_MMC.mkdir("/sys");
   if (!SD_MMC.exists("/journal")) SD_MMC.mkdir("/journal");
-  if (SAVE_POWER) setCpuFrequencyMhz(POWER_SAVE_FREQ);
+  if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
   disableTimeout = false;
 
   // Switch USB contol to BMS
@@ -120,7 +120,7 @@ void USB_INIT() {
 
   // OPEN USB FILE TRANSFER
   OLED().oledWord("Initializing USB");
-  setCpuFrequencyMhz(240);
+  pocketmage::setCpuSpeed(240);
   delay(50);
 
   disableTimeout = true;
