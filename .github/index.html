@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>PocketMage Web Installer</title>
-    <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+    <script src="https://cdn.jsdelivr.net/npm/esptool-js@0.5.0/lib/index.js"></script>
     <style>
         :root {
             --wp--preset--color--background: #fefef3;
@@ -26,7 +26,7 @@
             font-size: 21px;
             line-height: 1.5;
             letter-spacing: -0.01em;
-            overflow-x: hidden; /* Prevent horizontal scrolling */
+            overflow-x: hidden;
         }
 
         .site-header {
@@ -103,7 +103,7 @@
             box-shadow: 4px 4px 0 currentColor;
             text-align: center;
             position: sticky;
-            top: 100px; /* Position below the header */
+            top: 100px;
             z-index: 50;
         }
 
@@ -131,15 +131,62 @@
             min-width: 190px;
         }
 
-        esp-web-install-button {
-            --esp-tools-button-color: var(--wp--preset--color--foreground);
-            --esp-tools-button-text-color: var(--wp--preset--color--background);
+        .flash-button {
+            background-color: var(--wp--preset--color--foreground);
+            color: var(--wp--preset--color--background);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 0;
+            box-shadow: 4px 4px 0 var(--wp--preset--color--primary);
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .flash-button:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0 var(--wp--preset--color--primary);
+        }
+
+        .flash-button:disabled {
+            background-color: #999;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 4px 4px 0 var(--wp--preset--color--primary);
         }
 
         .status-text {
             margin-top: 1rem;
             color: #666;
             font-size: clamp(14px, 0.875rem + ((1vw - 3.2px) * 0.375), 20px);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border: 2px solid currentColor;
+            margin-top: 1rem;
+            position: relative;
+            display: none;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--wp--preset--color--foreground);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--wp--preset--color--primary);
+            font-weight: 700;
         }
 
         .form-group {
@@ -183,46 +230,27 @@
             background: #fff;
         }
 
-        .radio-group {
+        .checkbox-group {
             display: flex;
-            gap: 1rem;
+            align-items: center;
+            gap: 0.75rem;
             margin-top: 0.5rem;
         }
 
-        .radio-option {
-            flex: 1;
+        .checkbox-option input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--wp--preset--color--foreground);
         }
 
-        .radio-option input[type="radio"] {
-            display: none;
-        }
-
-        .radio-option label {
-            display: block;
-            padding: calc(0.667em + 2px) calc(1.333em + 2px);
-            border: 2px solid currentColor;
-            border-radius: 0;
-            text-align: center;
-            cursor: pointer;
-            background: var(--wp--preset--color--background);
-            font-weight: 700;
-            text-transform: inherit;
+        .checkbox-option label {
+            display: inline;
+            font-weight: 400;
+            text-transform: none;
             letter-spacing: inherit;
             font-size: clamp(16px, 1rem + ((1vw - 3.2px) * 0.125), 18px);
-            transition: all 0.2s;
-            box-shadow: 4px 4px 0 currentColor;
-        }
-
-        .radio-option input[type="radio"]:checked+label {
-            background: var(--wp--preset--color--foreground);
-            color: var(--wp--preset--color--background);
-            transform: translate(2px, 2px);
-            box-shadow: 2px 2px 0 currentColor;
-        }
-
-        .radio-option label:hover {
-            transform: translate(1px, 1px);
-            box-shadow: 3px 3px 0 currentColor;
+            margin: 0;
+            cursor: pointer;
         }
 
         .info-box {
@@ -231,7 +259,7 @@
             border-radius: 0;
             padding: 1.25rem;
             margin: min(32px, 6.4vw) 0;
-            overflow: auto; /* Prevent content from overflowing */
+            overflow: auto;
         }
 
         .info-box strong {
@@ -292,8 +320,9 @@
                 flex-direction: column;
                 gap: 1.5rem;
             }
-            .radio-group {
+            .checkbox-group {
                 flex-direction: column;
+                align-items: flex-start;
             }
 
             .header-container {
@@ -329,7 +358,11 @@
         <p>Flash firmware to your PocketMage via USB</p>
 
         <div class="connect-section">
-            <esp-web-install-button id="install-btn"></esp-web-install-button>
+            <button id="flash-btn" class="flash-button" disabled>Select firmware version</button>
+            <div class="progress-bar" id="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+                <div class="progress-text" id="progress-text">0%</div>
+            </div>
             <div class="status-text" id="status">Select a version to begin</div>
         </div>
 
@@ -343,15 +376,10 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Installation Mode</label>
-                        <div class="radio-group">
-                            <div class="radio-option">
-                                <input type="radio" id="update" name="install-type" value="update" checked />
-                                <label for="update">Update</label>
-                            </div>
-                            <div class="radio-option">
-                                <input type="radio" id="fresh" name="install-type" value="fresh" />
-                                <label for="fresh">Fresh Install</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-option">
+                                <input type="checkbox" id="preserve-data" name="preserve-data" checked />
+                                <label for="preserve-data">Preserve user data during installation</label>
                             </div>
                         </div>
                     </div>
@@ -360,11 +388,9 @@
         </div>
 
         <div class="info-box">
-            <strong>Installation Modes</strong>
-            <p>Update mode flashes only the application partition, preserving your NVS settings, SPIFFS data, and any
-                saved content.</p>
-            <p>Fresh install mode writes bootloader, partition table, and application. This will erase all stored data
-                and settings.</p>
+            <strong>Installation Options</strong>
+            <p>When "Preserve user data" is checked, only the application partition will be flashed, keeping your settings and saved content.</p>
+            <p>When unchecked, a complete installation will be performed, which erases all data and settings.</p>
         </div>
 
         <div class="info-box">
@@ -384,9 +410,15 @@
 
     <script>
         const versionSelect = document.getElementById('version-select');
-        const installBtn = document.getElementById('install-btn');
+        const flashBtn = document.getElementById('flash-btn');
         const statusDiv = document.getElementById('status');
-        const installTypeRadios = document.querySelectorAll('input[name="install-type"]');
+        const preserveDataCheckbox = document.getElementById('preserve-data');
+        const progressBar = document.getElementById('progress-bar');
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+
+        let firmwareFiles = {};
+        let espLoader;
 
         async function loadVersions() {
             try {
@@ -401,6 +433,19 @@
                     return;
                 }
 
+                // Load the first version to get the manifest structure
+                const firstVersion = data.versions[0];
+                const manifestResponse = await fetch(`./firmware/${firstVersion}/manifest.json`);
+                const manifest = await manifestResponse.json();
+
+                // Extract the file structure from the manifest
+                const build = manifest.builds[0];
+                firmwareFiles = {
+                    bootloader: build.parts.find(p => p.path.includes('bootloader')),
+                    partitions: build.parts.find(p => p.path.includes('partitions')),
+                    application: build.parts.find(p => p.path.includes('firmware'))
+                };
+
                 data.versions.forEach(version => {
                     const option = document.createElement('option');
                     option.value = version;
@@ -410,7 +455,7 @@
 
                 if (data.versions.length > 0) {
                     versionSelect.value = data.versions[0];
-                    updateManifest();
+                    updateStatus();
                 }
             } catch (error) {
                 console.error('Failed to load versions:', error);
@@ -419,31 +464,132 @@
             }
         }
 
-        function updateManifest() {
+        function updateStatus() {
             const version = versionSelect.value;
-            const installType = document.querySelector('input[name="install-type"]:checked').value;
+            const preserveData = preserveDataCheckbox.checked;
 
             if (!version) {
-                installBtn.removeAttribute('manifest');
+                flashBtn.disabled = true;
+                flashBtn.textContent = 'Select firmware version';
                 statusDiv.textContent = 'Please select a version';
                 return;
             }
 
-            const manifestFile = installType === 'update'
-                ? 'manifest_no_erase.json'
-                : 'manifest.json';
-
-            const manifestPath = `./firmware/${version}/${manifestFile}`;
-            installBtn.setAttribute('manifest', manifestPath);
-
-            const modeText = installType === 'update' ? 'Update' : 'Fresh Install';
+            flashBtn.disabled = false;
+            const modeText = preserveData ? 'Update (preserve data)' : 'Full installation';
+            flashBtn.textContent = `Flash ${version}`;
             statusDiv.textContent = `Ready to flash ${version} (${modeText})`;
         }
 
-        versionSelect.addEventListener('change', updateManifest);
-        installTypeRadios.forEach(radio => {
-            radio.addEventListener('change', updateManifest);
-        });
+        async function initializeEspLoader() {
+            try {
+                // Create a new ESP loader instance
+                espLoader = new ESPLoader({
+                    updateProgress: (fileIndex, progress, total) => {
+                        const percent = Math.round((progress / total) * 100);
+                        progressFill.style.width = `${percent}%`;
+                        progressText.textContent = `${percent}%`;
+                    },
+                    updateLog: (message) => {
+                        console.log(message);
+                    }
+                });
+
+                // Request serial port
+                const port = await navigator.serial.requestPort();
+                await espLoader.connect(port);
+
+                // Detect chip type (should be ESP32-S3 for PocketMage)
+                const chipType = await espLoader.detectChip();
+                if (chipType !== 'ESP32-S3') {
+                    throw new Error(`Unsupported chip type: ${chipType}. This tool is designed for ESP32-S3.`);
+                }
+
+                return true;
+            } catch (error) {
+                console.error('Failed to initialize ESP loader:', error);
+                statusDiv.textContent = `Error: ${error.message}`;
+                return false;
+            }
+        }
+
+        async function flashFirmware() {
+            const version = versionSelect.value;
+            const preserveData = preserveDataCheckbox.checked;
+
+            if (!version) {
+                statusDiv.textContent = 'Please select a version';
+                return;
+            }
+
+            try {
+                flashBtn.disabled = true;
+                progressBar.style.display = 'block';
+                statusDiv.textContent = 'Connecting to device...';
+
+                // Initialize ESP loader
+                const initialized = await initializeEspLoader();
+                if (!initialized) {
+                    return;
+                }
+
+                statusDiv.textContent = 'Loading firmware files...';
+
+                // Determine which files to flash based on preserve data option
+                const filesToFlash = [];
+                
+                if (!preserveData) {
+                    // Full install - flash bootloader and partitions
+                    const bootloaderFile = await fetch(`./firmware/${version}/${firmwareFiles.bootloader.path}`);
+                    const bootloaderArrayBuffer = await bootloaderFile.arrayBuffer();
+                    filesToFlash.push({
+                        data: bootloaderArrayBuffer,
+                        address: firmwareFiles.bootloader.offset
+                    });
+
+                    const partitionsFile = await fetch(`./firmware/${version}/${firmwareFiles.partitions.path}`);
+                    const partitionsArrayBuffer = await partitionsFile.arrayBuffer();
+                    filesToFlash.push({
+                        data: partitionsArrayBuffer,
+                        address: firmwareFiles.partitions.offset
+                    });
+                }
+
+                // Always flash the application
+                const appFile = await fetch(`./firmware/${version}/${firmwareFiles.application.path}`);
+                const appArrayBuffer = await appFile.arrayBuffer();
+                filesToFlash.push({
+                    data: appArrayBuffer,
+                    address: firmwareFiles.application.offset
+                });
+
+                statusDiv.textContent = 'Flashing firmware...';
+
+                // Flash the files
+                await espLoader.flashFiles(filesToFlash);
+
+                statusDiv.textContent = 'Firmware flashed successfully!';
+                progressFill.style.width = '100%';
+                progressText.textContent = '100%';
+
+                // Disconnect after successful flash
+                await espLoader.disconnect();
+            } catch (error) {
+                console.error('Flashing failed:', error);
+                statusDiv.textContent = `Flashing failed: ${error.message}`;
+            } finally {
+                flashBtn.disabled = false;
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                    progressFill.style.width = '0%';
+                    progressText.textContent = '0%';
+                }, 3000);
+            }
+        }
+
+        versionSelect.addEventListener('change', updateStatus);
+        preserveDataCheckbox.addEventListener('change', updateStatus);
+        flashBtn.addEventListener('click', flashFirmware);
 
         loadVersions();
     </script>
