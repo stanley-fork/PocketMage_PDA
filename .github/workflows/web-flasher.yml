@@ -160,6 +160,7 @@ jobs:
           mkdir -p "$GITHUB_WORKSPACE/docs"
           cp "$GITHUB_WORKSPACE/Code/WebFlasher/index.html" "$GITHUB_WORKSPACE/docs/index.html"
           cp "$GITHUB_WORKSPACE/Code/WebFlasher/logo.png" "$GITHUB_WORKSPACE/docs/logo.png"
+          cp "$GITHUB_WORKSPACE/Code/WebFlasher/favicon.png" "$GITHUB_WORKSPACE/docs/favicon.png"
           echo "Copied web flasher interface"
 
       - name: Upload to Pages Reliquary
