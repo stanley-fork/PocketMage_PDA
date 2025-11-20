@@ -210,6 +210,68 @@ jobs:
           echo "Wrote deploy-info.json:"
           cat "$GITHUB_WORKSPACE/docs/deploy-info.json"
 
+      - name: Preserve release artifacts from existing gh-pages (merge previous releases, keep only latest dev)
+        run: |
+          set -euo pipefail
+          # Clone gh-pages branch into a temp location to preserve release artifacts
+          TMP_DIR=$(mktemp -d)
+          REPO_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+
+          echo "Attempting to clone gh-pages branch to inspect existing published assets..."
+          if git clone --depth=1 --branch gh-pages "$REPO_URL" "$TMP_DIR" 2>/dev/null; then
+            echo "gh-pages branch cloned to $TMP_DIR"
+            # Ensure workspace docs firmware directory exists
+            mkdir -p "$GITHUB_WORKSPACE/docs/firmware"
+
+            # Copy existing release (non-dev-) firmware directories into workspace docs/firmware
+            if [ -d "$TMP_DIR/docs/firmware" ]; then
+              echo "Copying release firmware directories from gh-pages into workspace docs/firmware..."
+              # Only copy directories that do NOT start with dev-
+              find "$TMP_DIR/docs/firmware" -maxdepth 1 -mindepth 1 -type d ! -name 'dev-*' -print0 | while IFS= read -r -d '' dir; do
+                base=$(basename "$dir")
+                echo "  copying $base"
+                # preserve existing release directories; overwrite if same name
+                rm -rf "$GITHUB_WORKSPACE/docs/firmware/$base" || true
+                cp -a "$dir" "$GITHUB_WORKSPACE/docs/firmware/$base"
+              done || true
+            fi
+
+            # Merge manifest-index.json: preserve old non-dev release entries and merge with current workspace index
+            if [ -f "$TMP_DIR/docs/manifest-index.json" ] && [ -f "$GITHUB_WORKSPACE/docs/manifest-index.json" ]; then
+              echo "Merging manifest-index.json from gh-pages with current workspace manifest-index.json..."
+              jq -s '(
+                (.[0].versions // []) as $new |
+                (.[1].versions // []) as $old |
+                ($old | map(select(startswith("dev-") | not))) + ($new) |
+                unique
+              ) | {versions: .}' "$GITHUB_WORKSPACE/docs/manifest-index.json" "$TMP_DIR/docs/manifest-index.json" > "$GITHUB_WORKSPACE/docs/manifest-index.json.merged" || true
+
+              if [ -f "$GITHUB_WORKSPACE/docs/manifest-index.json.merged" ]; then
+                mv "$GITHUB_WORKSPACE/docs/manifest-index.json.merged" "$GITHUB_WORKSPACE/docs/manifest-index.json"
+                echo "Merged manifest-index.json written."
+                cat "$GITHUB_WORKSPACE/docs/manifest-index.json"
+              fi
+            fi
+
+            # Remove older dev-* firmware directories from workspace, keeping only the current dev (if any)
+            if [ -f "$GITHUB_WORKSPACE/docs/deploy-info.json" ]; then
+              CUR=$(jq -r '.release_tag' "$GITHUB_WORKSPACE/docs/deploy-info.json")
+              if [[ "$CUR" == dev-* ]]; then
+                echo "Cleaning up old dev-* firmware directories, keeping $CUR"
+                find "$GITHUB_WORKSPACE/docs/firmware" -maxdepth 1 -mindepth 1 -type d -name 'dev-*' -print0 | while IFS= read -r -d '' d; do
+                  b=$(basename "$d")
+                  if [ "$b" != "$CUR" ]; then
+                    echo "  removing old dev dir: $b"
+                    rm -rf "$d"
+                  fi
+                done || true
+              fi
+            fi
+
+          else
+            echo "No gh-pages branch present (or clone failed); nothing to preserve."
+          fi
+
       - name: Copy the Web Flasher Shrine (interface)
         run: |
           set -euo pipefail
