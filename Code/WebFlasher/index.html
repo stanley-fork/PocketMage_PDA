@@ -402,6 +402,16 @@
             text-decoration: none;
         }
 
+        .dev-build {
+            margin-top: 0.45rem;
+            color: var(--wp--preset--color--foreground);
+            font-weight: 700;
+            font-size: clamp(12px, 0.75rem + ((1vw - 3.2px) * 0.2), 14px);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         @media (max-width: 768px) {
             .form-controls-row {
                 flex-direction: column;
@@ -453,6 +463,8 @@
                 <div class="progress-text" id="progress-text">0%</div>
             </div>
             <div class="status-text" id="status">Select a version to begin</div>
+            <!-- New dev build info line (hidden when not a dev build) -->
+            <div class="dev-build" id="dev-info" style="display:none;" aria-live="polite"></div>
         </div>
 
         <div class="form-section">
@@ -508,6 +520,7 @@
         const progressBar = document.getElementById('progress-bar');
         const progressFill = document.getElementById('progress-fill');
         const progressText = document.getElementById('progress-text');
+        const devInfo = document.getElementById('dev-info');
 
         let firmwareFiles = {};
         let esploader;
@@ -551,6 +564,29 @@
                 return isNaN(v) ? 0 : v;
             }
             return 0;
+        }
+
+        // Parse dev version tag like dev-20251121-012248 and return formatted UTC datetime string
+        function formatDevBuild(version) {
+            if (!version || typeof version !== 'string') return null;
+            const m = version.match(/^dev-(\d{8})-(\d{6})$/);
+            if (!m) return null;
+            const datePart = m[1]; // YYYYMMDD
+            const timePart = m[2]; // HHMMSS
+            const year = parseInt(datePart.slice(0, 4), 10);
+            const month = parseInt(datePart.slice(4, 6), 10) - 1; // JS months 0-11
+            const day = parseInt(datePart.slice(6, 8), 10);
+            const hours = parseInt(timePart.slice(0, 2), 10);
+            const minutes = parseInt(timePart.slice(2, 4), 10);
+            const seconds = parseInt(timePart.slice(4, 6), 10);
+
+            // Construct a UTC timestamp
+            const ts = Date.UTC(year, month, day, hours, minutes, seconds);
+            const d = new Date(ts);
+            // Format as "YYYY-MM-DD HH:MM:SS UTC" (stable)
+            const pad = (n) => String(n).padStart(2, '0');
+            const formatted = `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`;
+            return formatted;
         }
 
         async function loadVersions() {
@@ -632,6 +668,10 @@
             const version = versionSelect.value;
             const preserveData = preserveDataCheckbox.checked;
 
+            // Hide dev info by default
+            devInfo.style.display = 'none';
+            devInfo.textContent = '';
+
             if (!version) {
                 flashBtn.disabled = true;
                 flashBtn.textContent = 'Select firmware version';
@@ -643,6 +683,14 @@
             const modeText = preserveData ? 'Update (preserve data)' : 'Full installation';
             flashBtn.textContent = `Flash ${version}`;
             statusDiv.textContent = `Ready to flash ${version} (${modeText})`;
+
+            // If this version is a dev build, try to parse and display a friendly date/time
+            const devFormatted = formatDevBuild(version);
+            if (devFormatted) {
+                devInfo.style.display = 'block';
+                devInfo.title = devFormatted;
+                devInfo.textContent = `Dev Build: ${devFormatted}`;
+            }
         }
 
         async function initializeEspLoader() {
