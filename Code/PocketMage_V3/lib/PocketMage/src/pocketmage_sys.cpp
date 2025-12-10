@@ -470,7 +470,6 @@ namespace pocketmage::file{
 }   // namespace pocketmage::file
 
 namespace pocketmage::time{
-    
     void setTimeFromString(String timeStr) {
     if (timeStr.length() != 5 || timeStr[2] != ':') {
         ESP_LOGE(TAG, "Invalid format! Use HH:MM. Provided str: %s", timeStr.c_str());
@@ -549,7 +548,7 @@ namespace pocketmage::time{
     }
 
     // Power Button Event sleep
-    if (PWR_BTN_event && CurrentHOMEState != NOWLATER) {
+    if ((PWR_BTN_event || digitalRead(PWR_BTN) == LOW) && CurrentHOMEState != NOWLATER) {
         PWR_BTN_event = false;
 
         // Save current work:
@@ -618,7 +617,7 @@ namespace pocketmage::time{
         }
         }
 
-    } else if (PWR_BTN_event && CurrentHOMEState == NOWLATER) {
+    } else if ((PWR_BTN_event || digitalRead(PWR_BTN) == LOW) && CurrentHOMEState == NOWLATER) {
         // Load last state
         /*prefs.begin("PocketMage", true);
         SD().setEditingFile(prefs.getString("editingFile", "");
@@ -755,6 +754,9 @@ namespace pocketmage::power{
     PowerSystem.setBoost(false);
     PowerSystem.setUSBControlBMS();
     PowerSystem.setCCMode(0b000); // Set CC mode: 000 = Sink only
+
+    // Clear keyboard buffer
+    keypad.flush();
 
     // Sleep the ESP32
     esp_deep_sleep_start();

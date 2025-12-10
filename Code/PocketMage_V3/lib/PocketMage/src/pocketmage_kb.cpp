@@ -786,13 +786,15 @@ void PocketmageKB::checkUSBKB() {
   }
   else {
 
-    // Should probably add shutdown script here but it does not work...
+    #pragma message "TODO: Should probably add shutdown script here but it does not work..."
     // close_USBHID();
 
     // Disable boost if not already off
     bool boostOn;
     if (PowerSystem.getBoostState(boostOn) && boostOn) {
-        PowerSystem.setBoost(false);
+      PowerSystem.setBoost(false);
+      detachInterrupt(digitalPinToInterrupt(PWR_BTN));
+      attachInterrupt(digitalPinToInterrupt(PWR_BTN), pocketmage::power::PWR_BTN_irq, FALLING);
     }
 
     PowerSystem.setUSBControlBMS();
