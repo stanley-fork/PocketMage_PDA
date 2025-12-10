@@ -26,6 +26,7 @@ bool sinkEnabled        = false;
 volatile bool SDActive  = false;
 volatile int battState = 0;           // Bary state
 bool doNowLater = false;
+bool doNowLater = false;
 
 ///////////////////////////////////////////////////////////////////////////////
 //            Use this function in apps to return to PocketMage OS           //
@@ -140,6 +141,13 @@ namespace pocketmage {
 
             if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
             SDActive = false;
+        switch (CurrentAppState) {
+            case TXT:
+            if (SLEEPMODE == "TEXT" && SD().getEditingFile() != "") {
+                pocketmage::power::deepSleep(true);
+            } else
+                pocketmage::power::deepSleep();
+            break;
 
             EINK().multiPassRefresh(2);
         } else {
