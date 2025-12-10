@@ -756,6 +756,9 @@ namespace pocketmage::power{
     PowerSystem.setUSBControlBMS();
     PowerSystem.setCCMode(0b000); // Set CC mode: 000 = Sink only
 
+    // Clear keyboard buffer
+    keypad.flush();
+
     // Sleep the ESP32
     esp_deep_sleep_start();
     }
