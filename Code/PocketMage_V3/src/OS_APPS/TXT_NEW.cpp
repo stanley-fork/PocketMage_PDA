@@ -1357,6 +1357,19 @@ void editAppend(char inchar) {
   }
   // ENTER Received
   else if (inchar == 13) {
+    // Check if false blank line
+    bool hasAnyText = false;
+    for (auto& ln : editingDocLine.lines) {
+      if (lineHasText(ln)) {
+        hasAnyText = true;
+        break;
+      }
+    }
+    if (hasAnyText && editingDocLine.style == 'B') {
+      editingDocLine.style = 'T';
+    }
+
+    // Line types
     // Horizontal Rule
     if (editingDocLine.style == 'H') {
       editingDocLine.line = "---";
