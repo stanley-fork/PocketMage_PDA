@@ -45,6 +45,87 @@ static bool rmRF(fs::FS &fs, const char *path) {
     return fs.rmdir(path);
 }
 
+bool copyFile(fs::FS &fs, const char *src, const char *dst) {
+  File in = fs.open(src, "r");
+  if (!in) return false;
+
+  File out = fs.open(dst, "w");
+  if (!out) { in.close(); return false; }
+
+  uint8_t buf[1024];
+  while (in.available()) {
+    size_t r = in.read(buf, sizeof(buf));
+    if (out.write(buf, r) != r) {
+      in.close(); out.close();
+      return false;
+    }
+    vTaskDelay(1); // feed watchdog
+  }
+
+  in.close();
+  out.close();
+  return true;
+}
+// ---------- Place this at the top of the .cpp file, before installTask ----------
+void copyDirRecursive(File src, const String &assetsSrc, const String &assetsDst) {
+    while (true) {
+        File entry = src.openNextFile();
+        if (!entry) break;
+
+        String name = entry.name();
+        String relative = name.substring(assetsSrc.length());
+        String dstFile = assetsDst + relative;
+
+        if (entry.isDirectory()) {
+            ensureDir(SD_MMC, dstFile.c_str());
+            copyDirRecursive(entry, assetsSrc, assetsDst);
+        } else {
+            File dst = SD_MMC.open(dstFile.c_str(), FILE_WRITE);
+            if (dst) {
+                uint8_t buf[512];
+                size_t len;
+                while ((len = entry.read(buf, sizeof(buf))) > 0) {
+                    dst.write(buf, len);
+                }
+                dst.close();
+                Serial.printf("Copied %s -> %s\n", name.c_str(), dstFile.c_str());
+            } else {
+                Serial.printf("Failed to open destination file %s\n", dstFile.c_str());
+            }
+        }
+        entry.close();
+    }
+}
+
+bool copyAssetsFlat(fs::FS &fs, const char *srcDir, const char *dstDir) {
+  ensureDir(fs, dstDir);
+
+  File dir = fs.open(srcDir);
+  if (!dir || !dir.isDirectory()) return false;
+
+  File f;
+  while ((f = dir.openNextFile())) {
+    String srcPath = String(srcDir) + "/" + f.name();
+    String dstPath = String(dstDir) + "/" + f.name();
+
+    if (f.isDirectory()) {
+      ensureDir(fs, dstPath.c_str());
+      copyAssetsFlat(fs, srcPath.c_str(), dstPath.c_str());
+    } else {
+      if (!copyFile(fs, srcPath.c_str(), dstPath.c_str())) {
+        f.close();
+        dir.close();
+        return false;
+      }
+    }
+    f.close();
+    vTaskDelay(1);
+  }
+  dir.close();
+  return true;
+}
+
+
 static String basenameNoExt(const String &path, const char *ext = ".tar") {
   int slash = path.lastIndexOf('/');
   String name = (slash >= 0) ? path.substring(slash + 1) : path;
@@ -209,22 +290,104 @@ static void installTask(void *param) {
 
 	g_installProgress = 50; // halfway
 
-	// --- Prepare BIN path ---
-	String base = basenameNoExt(p->tarRelName, ".tar");
-	String binPath = pathJoin(TEMP_DIR, base + ".bin");
-	if (!SD_MMC.exists(binPath.c_str())) {
-		Serial.printf("Bin not found after extraction: %s\n", binPath.c_str());
+// --- Determine main .bin and base name ---
+String binPath = "";
+String base = "";
 
+File tempRoot1 = SD_MMC.open(TEMP_DIR);
+if (tempRoot1 && tempRoot1.isDirectory()) {
+    File entry;
+    while ((entry = tempRoot1.openNextFile())) {
+        String name = String(entry.name());
+        if (name.endsWith(".bin") && !name.endsWith("_ICON.bin")) {
+            binPath = pathJoin(TEMP_DIR, name);
+            // Derive base from the main .bin
+            int dot = name.lastIndexOf('.');
+            if (dot > 0) base = name.substring(0, dot);
+            entry.close();
+            break;
+        }
+        entry.close();
+    }
+    tempRoot1.close();
+}
+
+if (binPath.length() == 0 || base.length() == 0) {
+    Serial.printf("Bin not found after extraction in %s\n", TEMP_DIR);
+    g_installFailed = true;
+    g_installDone = true;
+    delete p;
+    vTaskDelete(NULL);
+}
+
+Serial.printf("App base name determined: '%s'\n", base.c_str());
+
+
+// Wait up to ~200 ms for SD_MMC to see the files
+int waitMs = 0;
+while (waitMs < 200) {
+    File tempRoot = SD_MMC.open(TEMP_DIR);
+    bool found = false;
+    if (tempRoot && tempRoot.isDirectory()) {
+        File entry;
+        while ((entry = tempRoot.openNextFile())) {
+            String name = String(entry.name());
+            if (name.endsWith(".bin") && !name.endsWith("_ICON.bin")) {
+                binPath = pathJoin(TEMP_DIR, name);
+                found = true;
+            }
+            entry.close();
+            if (found) break;
+        }
+        tempRoot.close();
+    }
+    if (found && SD_MMC.exists(binPath.c_str())) break;
+
+    vTaskDelay(10 / portTICK_PERIOD_MS);
+    waitMs += 10;
+}
+
+Serial.println("Listing /apps/temp:");
+File tempRoot = SD_MMC.open(TEMP_DIR);
+if (tempRoot && tempRoot.isDirectory()) {
+    File entry;
+    while ((entry = tempRoot.openNextFile())) {
+        Serial.printf("  %s%s\n", entry.name(), entry.isDirectory() ? "/" : "");
+        entry.close();
+    }
+    tempRoot.close();
+}
+
+if (binPath.length() == 0 || !SD_MMC.exists(binPath.c_str())) {
+    Serial.printf("Bin not found after extraction: %s\n", binPath.c_str());
     cleanupAppsTemp(binPath);
     if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
+    g_installFailed = true;
+    g_installDone = true;
+    delete p;
+    vTaskDelete(NULL);
+}
 
-		g_installFailed = true;
-		g_installDone = true;
-		delete p;
-		vTaskDelete(NULL);
-	}
+delay(100);
 
-  delay(100);
+// --- Copy assets folder ---
+String assetsSrc = pathJoin(TEMP_DIR, "assets");
+String assetsDst = pathJoin("/assets", base);   // <-- correct target path
+
+if (SD_MMC.exists(assetsSrc.c_str())) {
+    rmRF(SD_MMC, assetsDst.c_str()); // clean old assets
+    Serial.printf("Copying assets: %s -> %s\n", assetsSrc.c_str(), assetsDst.c_str());
+    if (!copyAssetsFlat(SD_MMC, assetsSrc.c_str(), assetsDst.c_str())) {
+        Serial.println("Failed to copy assets!");
+        g_installFailed = true;
+        g_installDone = true;
+        cleanupAppsTemp(binPath);
+        if (SAVE_POWER) pocketmage::setCpuSpeed(POWER_SAVE_FREQ);
+        delete p;
+        vTaskDelete(NULL);
+    }
+}
+
 
 	// --- OTA flashing ---
 	const esp_partition_t *partition = esp_partition_find_first(
@@ -307,8 +470,31 @@ static void installTask(void *param) {
 		Serial.println("Flash OK");
 
 		// --- Determine icon path ---
-		String iconPath = pathJoin(TEMP_DIR, base + "_ICON.bin");
-		if (!SD_MMC.exists(iconPath.c_str())) iconPath = ""; // fallback
+String iconPath = "";
+String expectedIcon = base + "_ICON.bin";
+
+tempRoot = SD_MMC.open(TEMP_DIR);
+if (tempRoot && tempRoot.isDirectory()) {
+    File entry;
+    while ((entry = tempRoot.openNextFile())) {
+        String name = String(entry.name());
+        if (name.equalsIgnoreCase(expectedIcon)) {
+            iconPath = pathJoin(TEMP_DIR, name);
+            entry.close();
+            break;
+        }
+        entry.close();
+    }
+    tempRoot.close();
+}
+
+if (iconPath.length() == 0) {
+    Serial.printf("Icon not found for app '%s'\n", base.c_str());
+} else {
+    Serial.printf("Icon found: %s\n", iconPath.c_str());
+}
+
+
 
 		// --- Save AppInfo ---
 		AppInfo info = {};
